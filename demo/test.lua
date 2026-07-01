@@ -1,3 +1,15 @@
+--[[
+
+	Rayfield Interface Suite
+	by Sirius
+
+	shlex  | Designing + Programming
+	iRay   | Programming
+	Max    | Programming
+	Damian | Programming
+
+]]
+
 if debugX then
 	warn('Initialising Rayfield')
 end
@@ -942,7 +954,7 @@ end
 				local offset = (mousePos - center) / 30
 				-- Mouvement très subtil du BackgroundImage à l'intérieur du container
 				TweenService:Create(BackgroundImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Position = UDim2.new(-0.05, -offset.X, -0.05, -offset.Y)
+					Position = UDim2.new(-0.05, offset.X, -0.05, offset.Y)
 				}):Play()
 			else
 				TweenService:Create(BackgroundImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -953,11 +965,11 @@ end
 			
 -- Rendre la Topbar de la même couleur que le fond
 						pcall(function()
-							Topbar.BackgroundTransparency = 0
-									Topbar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+							Topbar.BackgroundTransparency = 1
+									-- Topbar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 									if Topbar:FindFirstChild("CornerRepair") then
-										Topbar.BackgroundTransparency = 0
-										Topbar.CornerRepair.BackgroundTransparency = 0
+										Topbar.BackgroundTransparency = 1
+										Topbar.CornerRepair.BackgroundTransparency = 1
 										Topbar.CornerRepair.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 									end
 					
@@ -1726,7 +1738,7 @@ local function Unhide()
 	Main.Visible = true
 	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = useMobileSizing and UDim2.new(0, 500, 0, 275) or UDim2.new(0, 500, 0, 475)}):Play()
 	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 500, 0, 45)}):Play()
-	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.6}):Play()
+	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 	TweenService:Create(Main.Topbar.Divider, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
@@ -1963,13 +1975,13 @@ function RayfieldLibrary:CreateWindow(Settings)
         local FriteText = Instance.new("TextLabel")
         FriteText.Parent = LCenter
         FriteText.BackgroundTransparency = 1
-        FriteText.Position = UDim2.new(0.5, 0, 0.5, -20)
+        FriteText.Position = UDim2.new(0.5, 0, 0.5, -15)
         FriteText.AnchorPoint = Vector2.new(0.5, 0.5)
-        FriteText.Size = UDim2.new(0, 300, 0, 60)
+        FriteText.Size = UDim2.new(0, 150, 0, 40)
         FriteText.Font = Enum.Font.GothamBlack
         FriteText.Text = "FRITE"
         FriteText.TextColor3 = Color3.fromRGB(255, 255, 255)
-        FriteText.TextSize = 60
+        FriteText.TextSize = 40
         FriteText.TextTransparency = 1
         
         local FriteGradient = Instance.new("UIGradient")
@@ -1983,22 +1995,22 @@ function RayfieldLibrary:CreateWindow(Settings)
         local HubText = Instance.new("TextLabel")
         HubText.Parent = LCenter
         HubText.BackgroundTransparency = 1
-        HubText.Position = UDim2.new(0.5, 0, 0.5, 30)
+        HubText.Position = UDim2.new(0.5, 0, 0.5, 15)
         HubText.AnchorPoint = Vector2.new(0.5, 0.5)
-        HubText.Size = UDim2.new(0, 200, 0, 40)
+        HubText.Size = UDim2.new(0, 100, 0, 30)
         HubText.Font = Enum.Font.GothamBold
         HubText.Text = "HUB"
         HubText.TextColor3 = Color3.fromRGB(200, 200, 200)
-        HubText.TextSize = 35
+        HubText.TextSize = 20
         HubText.TextTransparency = 1
         
         local LoaderBarBg = Instance.new("Frame")
         LoaderBarBg.Parent = LCenter
         LoaderBarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         LoaderBarBg.BorderSizePixel = 0
-        LoaderBarBg.Position = UDim2.new(0.5, 0, 0.5, 70)
+        LoaderBarBg.Position = UDim2.new(0.5, 0, 0.5, 45)
         LoaderBarBg.AnchorPoint = Vector2.new(0.5, 0.5)
-        LoaderBarBg.Size = UDim2.new(0, 250, 0, 3)
+        LoaderBarBg.Size = UDim2.new(0, 120, 0, 2)
         LoaderBarBg.BackgroundTransparency = 1
         
         local LoaderBarFill = Instance.new("Frame")
@@ -2011,9 +2023,9 @@ function RayfieldLibrary:CreateWindow(Settings)
         FillGradient.Parent = LoaderBarFill
         
         local TS = game:GetService("TweenService")
-        TS:Create(FriteText, TweenInfo.new(1, Enum.EasingStyle.Exponential), {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, -30)}):Play()
+        TS:Create(FriteText, TweenInfo.new(1, Enum.EasingStyle.Exponential), {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, -20)}):Play()
         task.wait(0.4)
-        TS:Create(HubText, TweenInfo.new(1, Enum.EasingStyle.Exponential), {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 20)}):Play()
+        TS:Create(HubText, TweenInfo.new(1, Enum.EasingStyle.Exponential), {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 10)}):Play()
         TS:Create(LoaderBarBg, TweenInfo.new(1, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
         
         TS:Create(LoaderBarFill, TweenInfo.new(2.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Size = UDim2.new(1, 0, 1, 0)}):Play()
@@ -2398,8 +2410,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Rayfield.Enabled = true
 
 	task.wait(0.5)
-	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
-	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.6}):Play()
+	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
+	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 	task.wait(0.1)
 	TweenService:Create(LoadingFrame.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 	task.wait(0.05)
