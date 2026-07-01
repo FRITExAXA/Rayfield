@@ -1,15 +1,3 @@
---[[
-
-	Rayfield Interface Suite
-	by Sirius
-
-	shlex  | Designing + Programming
-	iRay   | Programming
-	Max    | Programming
-	Damian | Programming
-
-]]
-
 if debugX then
 	warn('Initialising Rayfield')
 end
@@ -910,52 +898,58 @@ end
 		local BackgroundImage
 		local ResizeHandle
 	
+		getgenv().FRITE_Settings = getgenv().FRITE_Settings or {
+			SpotifyWidget = true,
+			Explorer = false,
+			SnowEffect = true,
+			GradientBorder = true,
+			Parallax3D = true,
+			SpotifyToken = ""
+		}
+
+        local ParallaxContainer = Instance.new("Frame")
+        ParallaxContainer.Name = "ParallaxContainer"
+        ParallaxContainer.Parent = Main
+        ParallaxContainer.Size = UDim2.new(1, 0, 1, 0)
+        ParallaxContainer.BackgroundTransparency = 1
+        ParallaxContainer.ClipsDescendants = true
+        ParallaxContainer.ZIndex = 1
+        
+        local PCorner = Instance.new("UICorner")
+        PCorner.CornerRadius = UDim.new(0, 10)
+        PCorner.Parent = ParallaxContainer
+
 		BackgroundImage = Instance.new("ImageLabel")
 		BackgroundImage.Name = "BackgroundImage"
-		BackgroundImage.Parent = Main
+		BackgroundImage.Parent = ParallaxContainer
 		BackgroundImage.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		BackgroundImage.BackgroundTransparency = 1
-		BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+		BackgroundImage.Size = UDim2.new(1.1, 0, 1.1, 0) -- Plus grand pour le parallax
+		BackgroundImage.Position = UDim2.new(-0.05, 0, -0.05, 0)
 		BackgroundImage.Image = "rbxassetid://85276739522110"
-			BackgroundImage.ZIndex = 1 -- Devant le fond gris
-						BackgroundImage.ImageTransparency = 0.7
-			
-			-- Variables de Settings (modifiables par le menu Insert)
-			getgenv().FRITE_Settings = getgenv().FRITE_Settings or {
-				SpotifyWidget = true,
-				Explorer = false,
-				SnowEffect = true,
-				GradientBorder = true,
-				Parallax3D = true,
-				SpotifyToken = ""
-			}
-			
-			-- Effet Parallax 3D
-			local parallaxConnection
-			parallaxConnection = RunService.RenderStepped:Connect(function()
-				if getgenv().FRITE_Settings.Parallax3D and BackgroundImage and BackgroundImage.Parent and Main.Visible then
-					local camera = workspace.CurrentCamera
-					if not camera then return end
-					local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-					local mousePos = UserInputService:GetMouseLocation()
-					local offset = (mousePos - center) / 40
-					TweenService:Create(BackgroundImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Position = UDim2.new(0, -offset.X - 10, 0, -offset.Y - 10),
-						Size = UDim2.new(1, 20, 1, 20)
-					}):Play()
-				else
-				    -- Reset
-				    TweenService:Create(BackgroundImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Position = UDim2.new(0, 0, 0, 0),
-						Size = UDim2.new(1, 0, 1, 0)
-					}):Play()
-				end
-			end)
-
-			
-			local UICorner = Instance.new("UICorner")
-			UICorner.CornerRadius = UDim.new(0, 10) -- Bords arrondis
-			UICorner.Parent = BackgroundImage
+		BackgroundImage.ZIndex = 1
+		BackgroundImage.ImageTransparency = 0.7
+		BackgroundImage.ScaleType = Enum.ScaleType.Crop
+		
+		-- Parallax Logic
+		RunService.RenderStepped:Connect(function()
+			if getgenv().FRITE_Settings.Parallax3D and BackgroundImage and BackgroundImage.Parent and Main.Visible then
+				local camera = workspace.CurrentCamera
+				if not camera then return end
+				local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+				local mousePos = UserInputService:GetMouseLocation()
+				-- Calcul de l'offset
+				local offset = (mousePos - center) / 30
+				-- Mouvement très subtil du BackgroundImage à l'intérieur du container
+				TweenService:Create(BackgroundImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Position = UDim2.new(-0.05, -offset.X, -0.05, -offset.Y)
+				}):Play()
+			else
+				TweenService:Create(BackgroundImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Position = UDim2.new(-0.05, 0, -0.05, 0)
+				}):Play()
+			end
+		end)
 			
 -- Rendre la Topbar de la même couleur que le fond
 						pcall(function()
@@ -1933,16 +1927,136 @@ local function fadeOutKeyUI(KeyMain)
 	TweenService:Create(KeyMain.Hide, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 end
 
-function RayfieldLibrary:CreateWindow(Settings)
-	if Rayfield:FindFirstChild('Loading') then
-		if getgenv and not getgenv().rayfieldCached then
-			Rayfield.Enabled = true
-			Rayfield.Loading.Visible = true
 
-			task.wait(1.4)
-			Rayfield.Loading.Visible = false
-		end
-	end
+function RayfieldLibrary:CreateWindow(Settings)
+    -- ================= FRITE HUB STANDALONE LOADER =================
+    if not getgenv().FRITE_Loader_Played then
+        getgenv().FRITE_Loader_Played = true
+        
+        local LoaderGui = Instance.new("ScreenGui")
+        LoaderGui.Name = "FriteHubLoaderGui"
+        LoaderGui.DisplayOrder = 99999
+        LoaderGui.IgnoreGuiInset = true
+        local parent = nil
+        if gethui then parent = gethui() elseif syn and syn.protect_gui then parent = game:GetService("CoreGui") else parent = game:GetService("CoreGui") end
+        LoaderGui.Parent = parent
+        
+        local LBg = Instance.new("Frame")
+        LBg.Parent = LoaderGui
+        LBg.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+        LBg.Size = UDim2.new(1, 0, 1, 0)
+        
+        -- Background image for loader
+        local LImg = Instance.new("ImageLabel")
+        LImg.Parent = LBg
+        LImg.BackgroundTransparency = 1
+        LImg.Size = UDim2.new(1, 0, 1, 0)
+        LImg.Image = "rbxassetid://85276739522110"
+        LImg.ImageTransparency = 0.8
+        LImg.ScaleType = Enum.ScaleType.Crop
+        
+        local LCenter = Instance.new("Frame")
+        LCenter.Parent = LBg
+        LCenter.BackgroundTransparency = 1
+        LCenter.Position = UDim2.new(0.5, 0, 0.5, 0)
+        
+        local FriteText = Instance.new("TextLabel")
+        FriteText.Parent = LCenter
+        FriteText.BackgroundTransparency = 1
+        FriteText.Position = UDim2.new(0.5, 0, 0.5, -20)
+        FriteText.AnchorPoint = Vector2.new(0.5, 0.5)
+        FriteText.Size = UDim2.new(0, 300, 0, 60)
+        FriteText.Font = Enum.Font.GothamBlack
+        FriteText.Text = "FRITE"
+        FriteText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        FriteText.TextSize = 60
+        FriteText.TextTransparency = 1
+        
+        local FriteGradient = Instance.new("UIGradient")
+        FriteGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 0, 255))
+        })
+        FriteGradient.Parent = FriteText
+        
+        local HubText = Instance.new("TextLabel")
+        HubText.Parent = LCenter
+        HubText.BackgroundTransparency = 1
+        HubText.Position = UDim2.new(0.5, 0, 0.5, 30)
+        HubText.AnchorPoint = Vector2.new(0.5, 0.5)
+        HubText.Size = UDim2.new(0, 200, 0, 40)
+        HubText.Font = Enum.Font.GothamBold
+        HubText.Text = "HUB"
+        HubText.TextColor3 = Color3.fromRGB(200, 200, 200)
+        HubText.TextSize = 35
+        HubText.TextTransparency = 1
+        
+        local LoaderBarBg = Instance.new("Frame")
+        LoaderBarBg.Parent = LCenter
+        LoaderBarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        LoaderBarBg.BorderSizePixel = 0
+        LoaderBarBg.Position = UDim2.new(0.5, 0, 0.5, 70)
+        LoaderBarBg.AnchorPoint = Vector2.new(0.5, 0.5)
+        LoaderBarBg.Size = UDim2.new(0, 250, 0, 3)
+        LoaderBarBg.BackgroundTransparency = 1
+        
+        local LoaderBarFill = Instance.new("Frame")
+        LoaderBarFill.Parent = LoaderBarBg
+        LoaderBarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        LoaderBarFill.BorderSizePixel = 0
+        LoaderBarFill.Size = UDim2.new(0, 0, 1, 0)
+        
+        local FillGradient = FriteGradient:Clone()
+        FillGradient.Parent = LoaderBarFill
+        
+        local TS = game:GetService("TweenService")
+        TS:Create(FriteText, TweenInfo.new(1, Enum.EasingStyle.Exponential), {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, -30)}):Play()
+        task.wait(0.4)
+        TS:Create(HubText, TweenInfo.new(1, Enum.EasingStyle.Exponential), {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 20)}):Play()
+        TS:Create(LoaderBarBg, TweenInfo.new(1, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
+        
+        TS:Create(LoaderBarFill, TweenInfo.new(2.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+        
+        -- Particles
+        task.spawn(function()
+            for i = 1, 20 do
+                local particle = Instance.new("Frame")
+                particle.Parent = LCenter
+                particle.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+                local s = math.random(3, 6)
+                particle.Size = UDim2.new(0, s, 0, s)
+                particle.Position = UDim2.new(0.5, math.random(-150, 150), 0.5, math.random(0, 80))
+                particle.BackgroundTransparency = 0
+                local corner = Instance.new("UICorner")
+                corner.CornerRadius = UDim.new(1, 0)
+                corner.Parent = particle
+                
+                TS:Create(particle, TweenInfo.new(math.random(15, 25)/10, Enum.EasingStyle.Linear), {
+                    Position = UDim2.new(0.5, particle.Position.X.Offset + math.random(-50, 50), 0.5, -100),
+                    BackgroundTransparency = 1
+                }):Play()
+                
+                task.delay(2.5, function() particle:Destroy() end)
+                task.wait(0.05)
+            end
+        end)
+        
+        task.wait(2.5)
+        
+        TS:Create(FriteText, TweenInfo.new(0.8, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+        TS:Create(HubText, TweenInfo.new(0.8, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+        TS:Create(LoaderBarBg, TweenInfo.new(0.8, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
+        TS:Create(LoaderBarFill, TweenInfo.new(0.8, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
+        TS:Create(LBg, TweenInfo.new(1.2, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
+        TS:Create(LImg, TweenInfo.new(1.2, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
+        
+        task.wait(1.2)
+        LoaderGui:Destroy()
+    end
+    -- ===============================================================
+
+-- Default Rayfield Loader removed
 
 	if getgenv then getgenv().rayfieldCached = true end
 
@@ -2283,117 +2397,18 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Notifications.Visible = true
 	Rayfield.Enabled = true
 
-
-	-- NOUVEAU LOADER FRITE HUB
 	task.wait(0.5)
 	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.6}):Play()
-	
-	-- Hide default loader texts
-	LoadingFrame.Title.Visible = false
-	LoadingFrame.Subtitle.Visible = false
-	LoadingFrame.Version.Visible = false
-	
-	-- Create FRITE HUB texts
-	local FriteText = Instance.new("TextLabel")
-	FriteText.Name = "FriteText"
-	FriteText.Parent = LoadingFrame
-	FriteText.BackgroundTransparency = 1
-	FriteText.Position = UDim2.new(0.5, 0, 0.5, -15)
-	FriteText.AnchorPoint = Vector2.new(0.5, 0.5)
-	FriteText.Size = UDim2.new(1, 0, 0, 50)
-	FriteText.Font = Enum.Font.GothamBlack
-	FriteText.Text = "FRITE"
-	FriteText.TextColor3 = Color3.fromRGB(255, 255, 255)
-	FriteText.TextSize = 40
-	FriteText.TextTransparency = 1
-	
-	local FriteGradient = Instance.new("UIGradient")
-	FriteGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 0, 255))
-	})
-	FriteGradient.Parent = FriteText
-	
-	local HubText = Instance.new("TextLabel")
-	HubText.Name = "HubText"
-	HubText.Parent = LoadingFrame
-	HubText.BackgroundTransparency = 1
-	HubText.Position = UDim2.new(0.5, 0, 0.5, 20)
-	HubText.AnchorPoint = Vector2.new(0.5, 0.5)
-	HubText.Size = UDim2.new(1, 0, 0, 30)
-	HubText.Font = Enum.Font.GothamBold
-	HubText.Text = "HUB"
-	HubText.TextColor3 = Color3.fromRGB(200, 200, 200)
-	HubText.TextSize = 24
-	HubText.TextTransparency = 1
-	
-	local LoaderBarBg = Instance.new("Frame")
-	LoaderBarBg.Parent = LoadingFrame
-	LoaderBarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	LoaderBarBg.BorderSizePixel = 0
-	LoaderBarBg.Position = UDim2.new(0.5, 0, 0.5, 45)
-	LoaderBarBg.AnchorPoint = Vector2.new(0.5, 0.5)
-	LoaderBarBg.Size = UDim2.new(0, 150, 0, 2)
-	LoaderBarBg.BackgroundTransparency = 1
-	
-	local LoaderBarFill = Instance.new("Frame")
-	LoaderBarFill.Parent = LoaderBarBg
-	LoaderBarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	LoaderBarFill.BorderSizePixel = 0
-	LoaderBarFill.Size = UDim2.new(0, 0, 1, 0)
-	
-	local FillGradient = FriteGradient:Clone()
-	FillGradient.Parent = LoaderBarFill
-	
-	-- Animations
-	TweenService:Create(FriteText, TweenInfo.new(0.8, Enum.EasingStyle.Exponential), {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, -20)}):Play()
-	task.wait(0.3)
-	TweenService:Create(HubText, TweenInfo.new(0.8, Enum.EasingStyle.Exponential), {TextTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 15)}):Play()
-	TweenService:Create(LoaderBarBg, TweenInfo.new(0.8, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
-	
-	-- Progress animation
-	TweenService:Create(LoaderBarFill, TweenInfo.new(2.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-	
-	-- Particles
-	task.spawn(function()
-	    for i = 1, 15 do
-	        local particle = Instance.new("Frame")
-	        particle.Parent = LoadingFrame
-	        particle.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
-	        particle.Size = UDim2.new(0, 4, 0, 4)
-	        particle.Position = UDim2.new(0.5, math.random(-80, 80), 0.5, math.random(10, 40))
-	        particle.BackgroundTransparency = 0
-	        
-	        local corner = Instance.new("UICorner")
-	        corner.CornerRadius = UDim.new(1, 0)
-	        corner.Parent = particle
-	        
-	        TweenService:Create(particle, TweenInfo.new(math.random(10, 20)/10, Enum.EasingStyle.Linear), {
-	            Position = UDim2.new(0.5, particle.Position.X.Offset + math.random(-30, 30), 0.5, -60),
-	            BackgroundTransparency = 1
-	        }):Play()
-	        
-	        task.delay(2, function() particle:Destroy() end)
-	        task.wait(0.1)
-	    end
-	end)
-	
-	task.wait(2.5)
-	
-	TweenService:Create(FriteText, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 1, Position = UDim2.new(0.5, 0, 0.5, -30)}):Play()
-	TweenService:Create(HubText, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 1, Position = UDim2.new(0.5, 0, 0.5, 5)}):Play()
-	TweenService:Create(LoaderBarBg, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
-	TweenService:Create(LoaderBarFill, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
-	
-	task.wait(0.5)
-	FriteText:Destroy()
-	HubText:Destroy()
-	LoaderBarBg:Destroy()
-	
-	Elements.Template.LayoutOrder = 100000
+	task.wait(0.1)
+	TweenService:Create(LoadingFrame.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+	task.wait(0.05)
+	TweenService:Create(LoadingFrame.Subtitle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+	task.wait(0.05)
+	TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 
+
+	Elements.Template.LayoutOrder = 100000
 	Elements.Template.Visible = false
 
 	Elements.UIPageLayout.FillDirection = Enum.FillDirection.Horizontal
